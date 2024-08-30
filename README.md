@@ -1,6 +1,6 @@
 # Automattic Themes
 
-The development repository for themes maintained by the [Automattic Theme Team](https://themeshaper.com/about/). 
+The development repository for themes maintained by the [Automattic Themes Team](https://themeshaper.com/about/). 
 
 ## What's Here
 
