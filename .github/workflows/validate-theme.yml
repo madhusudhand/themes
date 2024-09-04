@@ -34,4 +34,27 @@ jobs:
               run: npm ci
 
             - name: Validate Themes
+              id: validate_themes
               run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+
+            - name: Find Comment
+              uses: peter-evans/find-comment@v3
+              id: theme_issues_comment
+              with:
+                issue-number: ${{ github.event.pull_request.number }}
+                comment-author: 'github-actions[bot]'
+                body-includes: Theme validation summary
+
+            - name: Create or update PR comment
+              uses: peter-evans/create-or-update-comment@v3
+              with:
+                token: ${{ secrets.GITHUB_TOKEN }}
+                repository: ${{ github.repository }}
+                comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
+                issue-number: ${{ github.event.pull_request.number }}
+                edit-mode: replace
+                body: |
+                    ## Theme validation summary
+                    ```
+                    ${{ steps.validate_themes.outputs.output }}
+                    ```
