@@ -4,6 +4,7 @@ on:
     pull_request:
         paths:
             - '**/theme.json'
+            - '**/style.css'
             - '**/styles/*.json'
             - '**/assets/fonts/*.json'
 
