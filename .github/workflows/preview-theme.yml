@@ -1,8 +1,8 @@
 name: Preview Theme Changes
 
 on:
-  pull_request_target:
-    types: [opened, synchronize]
+  push:
+    branches: [ unknown ]
 permissions:
   pull-requests: write
 
