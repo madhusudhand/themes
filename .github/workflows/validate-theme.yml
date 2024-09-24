@@ -43,7 +43,7 @@ jobs:
         run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
 
       - name: Find Comment
-        if: steps.validate_themes.outputs.output != ''
+        if: success() || failure()
         uses: peter-evans/find-comment@v3
         id: theme_validation_comment
         with:
