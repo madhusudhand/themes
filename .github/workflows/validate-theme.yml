@@ -41,22 +41,36 @@ jobs:
 
             - name: Find Comment
               uses: peter-evans/find-comment@v3
-              id: theme_issues_comment
+              id: theme_validation_comment
               with:
                 issue-number: ${{ github.event.pull_request.number }}
                 comment-author: 'github-actions[bot]'
                 body-includes: Theme validation summary
 
-            - name: Create or update PR comment
+            - name: Create Comment
+              if: steps.theme_validation_comment.outputs.comment-id == ''
               uses: peter-evans/create-or-update-comment@v3
               with:
                 token: ${{ secrets.GITHUB_TOKEN }}
                 repository: ${{ github.repository }}
+                issue-number: ${{ github.event.pull_request.number }}
+                body: |
+                  ## Theme validation summary
+                  ```
+                  ${{ steps.validate_themes.outputs.output }}
+                  ```
+
+            - name: Update Comment
+              if: steps.theme_validation_comment.outputs.comment-id != ''
+              uses: peter-evans/create-or-update-comment@v3
+              with:
                 comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
+                token: ${{ secrets.GITHUB_TOKEN }}
+                repository: ${{ github.repository }}
                 issue-number: ${{ github.event.pull_request.number }}
                 edit-mode: replace
                 body: |
-                    ## Theme validation summary
-                    ```
-                    ${{ steps.validate_themes.outputs.output }}
-                    ```
+                  ## Theme validation summary
+                  ```
+                  ${{ steps.validate_themes.outputs.output }}
+                  ```
