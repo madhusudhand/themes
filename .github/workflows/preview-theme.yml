@@ -3,6 +3,7 @@ name: Preview Theme Changes
 on:
   push:
     branches: [ unknown ]
+
 permissions:
   pull-requests: write
 

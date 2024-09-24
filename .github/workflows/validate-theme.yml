@@ -52,7 +52,7 @@ jobs:
           body-includes: Theme validation summary
 
       - name: Create Comment
-        if: steps.theme_validation_comment.outputs.comment-id == '' && steps.validate_themes.outputs.output != ''
+        if: steps.theme_validation_comment.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +65,7 @@ jobs:
             ```
 
       - name: Update Comment
-        if: steps.theme_validation_comment.outputs.comment-id != '' && steps.validate_themes.outputs.output != ''
+        if: ( success() || failure() ) && steps.theme_validation_comment.outputs.comment-id != '' && steps.validate_themes.outputs.output != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
