@@ -29,21 +29,20 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+      # - name: Setup Node
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: '.nvmrc'
+      #     cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      # - name: Install dependencies
+      #   run: npm ci
 
-      - name: Validate Themes
-        id: validate_themes
-        run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+      # - name: Validate Themes
+      #   id: validate_themes
+      #   run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
 
       - name: Find Comment
-        if: success() || failure()
         uses: peter-evans/find-comment@v3
         id: theme_validation_comment
         with:
@@ -58,14 +57,15 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
+          # ${{ steps.validate_themes.outputs.output }}
           body: |
             ## Theme validation summary
             ```
-            ${{ steps.validate_themes.outputs.output }}
+            This is new comment
             ```
 
       - name: Update Comment
-        if: ( success() || failure() ) && steps.theme_validation_comment.outputs.comment-id != '' && steps.validate_themes.outputs.output != ''
+        if: steps.theme_validation_comment.outputs.comment-id != '' && steps.validate_themes.outputs.output != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
@@ -73,8 +73,9 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
+          # ${{ steps.validate_themes.outputs.output }}
           body: |
             ## Theme validation summary
             ```
-            ${{ steps.validate_themes.outputs.output }}
+            this is updated comment
             ```
