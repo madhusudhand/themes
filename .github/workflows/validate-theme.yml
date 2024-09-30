@@ -50,9 +50,9 @@ jobs:
         continue-on-error: true
         run: |
           echo "theme validation failed"
-          exit 1
-          # Capture the exit code
-          echo "::set-output name=exit_code::$?"
+          exit 1 || exit_code=$?
+          echo "Setting exit code to: ${exit_code:-0}"
+          echo "::set-output name=exit_code::${exit_code:-0}"
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
@@ -81,7 +81,7 @@ jobs:
         # && steps.validate_themes.outputs.output != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
-          comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
+          comment-id: ${{ steps.theme_validation_comment.outputs.comment-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
@@ -91,7 +91,7 @@ jobs:
             ```
             this is updated comment
 
-            ${{ steps.validate_themes.outputs.output }}
+            ${{ steps.validate_themes.outputs.exit_code }}
             ```
 
       - name: Send exit code
