@@ -50,9 +50,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "theme validation failed"
-          exit 1 || exit_code=$?
-          echo "Setting exit code to: ${exit_code:-0}"
-          echo "exit_code=${exit_code:-0}" >> $GITHUB_OUTPUT
+          exit 1
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
@@ -89,13 +87,6 @@ jobs:
           body: |
             ## Theme validation summary
             ```
-            this is updated comment
+            this is updated comment 2
 
-            ${{ steps.validate_themes.outputs.exit_code }}
             ```
-
-      - name: Send exit code
-        run: |
-          if [ "${{ steps.validate_themes.outputs.exit_code }}" -ne 0 ]; then
-            exit 1
-          fi
