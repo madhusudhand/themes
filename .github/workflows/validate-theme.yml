@@ -53,7 +53,7 @@ jobs:
           exit 1
 
       - name: Set failed flag if theme validation failed
-        if: failure()  # Runs only if the previous step failed
+        if: ${{ steps.validate_themes.outcome == 'failure' }}
         run: echo "VALIDATION_FAILED=true" >> $GITHUB_ENV
 
       - name: Find Comment
