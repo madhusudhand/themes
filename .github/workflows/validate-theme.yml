@@ -53,7 +53,7 @@ jobs:
             echo "node theme-utils.mjs validate-theme $changes"
             # node theme-utils.mjs validate-theme "$changes"
             output=$(node theme-utils.mjs validate-theme "$changes")
-            echo "Validation output: $output"
+            echo "$output"
             echo "output=$output" >> $GITHUB_OUTPUT
           fi
           # node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
