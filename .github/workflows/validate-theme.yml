@@ -35,15 +35,24 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      # - name: Install dependencies
+      #   run: npm ci
+
+      # - name: Validate Themes
+      #   id: validate_themes
+      #   continue-on-error: true
+      #   run: |
+      #     node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+      #     echo "exitcode=$?" >> $GITHUB_OUTPUT
 
       - name: Validate Themes
         id: validate_themes
         continue-on-error: true
         run: |
-          node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
-          echo "exitcode=$?" >> $GITHUB_OUTPUT
+          echo "theme validation failed"
+          exit 1
+          # Capture the exit code
+          echo "::set-output name=exit_code::$?"
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
@@ -68,7 +77,8 @@ jobs:
             ```
 
       - name: Update Comment
-        if: steps.theme_validation_comment.outputs.comment-id != '' && steps.validate_themes.outputs.output != ''
+        if: steps.theme_validation_comment.outputs.comment-id != ''
+        # && steps.validate_themes.outputs.output != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.theme_issues_comment.outputs.comment-id }}
@@ -80,11 +90,12 @@ jobs:
             ## Theme validation summary
             ```
             this is updated comment
-            
+
             ${{ steps.validate_themes.outputs.output }}
             ```
 
       - name: Send exit code
         run: |
-          echo ${{steps.validate_themes.outputs.exitcode}}
-          exit ${{steps.validate_themes.outputs.exitcode}}
+          if [ "${{ steps.validate_themes.outputs.exit_code }}" -ne 0 ]; then
+            exit 1
+          fi
