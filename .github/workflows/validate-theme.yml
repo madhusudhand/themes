@@ -52,7 +52,7 @@ jobs:
           echo "theme validation failed"
           exit 1 || exit_code=$?
           echo "Setting exit code to: ${exit_code:-0}"
-          echo "::set-output name=exit_code::${exit_code:-0}"
+          echo "exit_code=${exit_code:-0}" >> $GITHUB_OUTPUT
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
