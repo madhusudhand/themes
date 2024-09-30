@@ -42,7 +42,10 @@ jobs:
         id: validate_themes
         continue-on-error: true
         run: |
-          result=$(node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -))
+          # TODO: this might need to be changed
+          changed_dirs=$(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+          result=$(node theme-utils.mjs validate-theme "$changed_dirs" )
+          echo "$result"
           echo "result=$result" >> $GITHUB_OUTPUT
 
       - name: Set failed flag if theme validation failed
