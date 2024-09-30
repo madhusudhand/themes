@@ -54,7 +54,7 @@ jobs:
             # node theme-utils.mjs validate-theme "$changes"
 
             set +e
-            output=$(node theme-utils.mjs validate-theme "$changes")
+            output=$(node theme-utils.mjs validate-theme --format=dir "$changes")
             exit_code=$?
             set -e
 
@@ -67,11 +67,6 @@ jobs:
             echo "$output"
             echo "output=$output" >> $GITHUB_OUTPUT
           fi
-          # node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
-
-      # - name: Set failed flag if theme validation failed
-      #   if: ${{ steps.validate_themes.outcome == 'failure' }}
-      #   run: echo "VALIDATION_FAILED=true" >> $GITHUB_ENV
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
