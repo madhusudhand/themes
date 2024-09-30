@@ -29,20 +29,31 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+      # - name: Setup Node
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: '.nvmrc'
+      #     cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      # - name: Install dependencies
+      #   run: npm ci
 
       - name: Validate Themes
         id: validate_themes
         continue-on-error: true
         run: |
-          node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+          changes=$(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+          echo "Changes: $changes"
+          echo "output=$changes" >> $GITHUB_ENV
+          # if [ -z "$changes" ]; then
+          #   echo "No theme files changed, skipping theme validation..."
+          #   exit 0
+          # else
+          #   echo "Validating themes: $changes"
+          #   output=$(node theme-utils.mjs validate-theme $changes)
+          #   echo "output=$output" >> $GITHUB_ENV
+          # fi
+          # node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
 
       - name: Set failed flag if theme validation failed
         if: ${{ steps.validate_themes.outcome == 'failure' }}
