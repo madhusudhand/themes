@@ -29,11 +29,11 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+      # - name: Setup Node
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: '.nvmrc'
+      #     cache: 'npm'
 
       # - name: Install dependencies
       #   run: npm ci
@@ -52,6 +52,10 @@ jobs:
           echo "theme validation failed"
           exit 1
 
+      - name: Set failed flag if theme validation failed
+        if: failure()  # Runs only if the previous step failed
+        run: echo "VALIDATION_FAILED=true" >> $GITHUB_ENV
+
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: theme_validation_comment
@@ -67,11 +71,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
-          # ${{ steps.validate_themes.outputs.output }}
           body: |
             ## Theme validation summary
             ```
-            This is new comment
+            ${{ steps.validate_themes.outputs.output }}
             ```
 
       - name: Update Comment
@@ -87,6 +90,11 @@ jobs:
           body: |
             ## Theme validation summary
             ```
-            this is updated comment 2
-
+            ${{ steps.validate_themes.outputs.output }}
             ```
+      
+      - name: Fail job if validation failed
+        if: env.VALIDATION_FAILED == 'true'
+        run: |
+          echo "Theme validation failed, failing the job..."
+          exit 1
