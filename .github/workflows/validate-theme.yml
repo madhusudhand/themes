@@ -42,11 +42,7 @@ jobs:
         id: validate_themes
         continue-on-error: true
         run: |
-          # TODO: this might need to be changed
-          changed_dirs=$(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
-          result=$(node theme-utils.mjs validate-theme "$changed_dirs" )
-          echo "$result"
-          echo "result=$result" >> $GITHUB_OUTPUT
+          node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
 
       - name: Set failed flag if theme validation failed
         if: ${{ steps.validate_themes.outcome == 'failure' }}
@@ -70,12 +66,12 @@ jobs:
           body: |
             ## Theme validation summary
             ```
-            ${{ steps.validate_themes.outputs.result }}
+            ${{ steps.validate_themes.outputs.output }}
             ```
 
       - name: Update Comment
         if: steps.theme_validation_comment.outputs.comment-id != ''
-        # && steps.validate_themes.outputs.result != ''
+        # && steps.validate_themes.outputs.output != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.theme_validation_comment.outputs.comment-id }}
@@ -86,7 +82,7 @@ jobs:
           body: |
             ## Theme validation summary
             ```
-            ${{ steps.validate_themes.outputs.result }}
+            ${{ steps.validate_themes.outputs.output }}
             ```
       
       - name: Fail job if validation failed
