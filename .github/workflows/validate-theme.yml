@@ -40,7 +40,10 @@ jobs:
 
       # - name: Validate Themes
       #   id: validate_themes
-      #   run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+      #   continue-on-error: true
+      #   run: |
+      #     node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+      #     echo "exitcode=$?" >> $GITHUB_OUTPUT
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
