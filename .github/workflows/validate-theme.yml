@@ -1,37 +1,112 @@
 name: Validate Themes
 
 on:
-    pull_request:
-        paths:
-            - '**/theme.json'
-            - '**/styles/*.json'
-            - '**/assets/fonts/*.json'
+  pull_request:
+    paths:
+      - '**/theme.json'
+      - '**/styles/*.json'
+      - '**/assets/fonts/*.json'
+      - '**/style.css'
 
 env:
-    PR_PATHS: >-
-        '**/theme.json'
-        '**/styles/*.json'
-        '**/assets/fonts/*.json'
-    HUSKY: 0
+  PR_PATHS: >-
+    '**/theme.json'
+    '**/styles/*.json'
+    '**/assets/fonts/*.json'
+    '**/style.css'
+  HUSKY: 0
+
+permissions:
+  pull-requests: write
 
 jobs:
-    validate-theme:
-        runs-on: ubuntu-latest
+  validate-theme:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version-file: '.nvmrc'
-                  cache: 'npm'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Validate Themes
-              run: node theme-utils.mjs validate-theme $(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+      - name: Validate Themes
+        id: validate_themes
+        continue-on-error: true
+        run: |
+          changes=$(git diff --name-only HEAD^ -- ${{ env.PR_PATHS }} | awk -F/ '{print $1}' | uniq | paste -s -d, -)
+          echo "Changes: $changes"
+          echo "output=$changes" >> $GITHUB_OUTPUT
+          if [ -z "$changes" ]; then
+            echo "No theme files changed, skipping theme validation..."
+            exit 0
+          else
+            echo "Validating themes: $changes"
+            echo "running exit 1"
+            # node theme-utils.mjs validate-theme "$changes"
+
+            set +e
+            output=$(node theme-utils.mjs validate-theme --format=dir "$changes")
+            exit_code=$?
+            set -e
+
+            # Check the exit code
+            if [ $exit_code -ne 0 ]; then
+              echo "Command failed with exit code $exit_code."
+              echo "VALIDATION_FAILED=true" >> $GITHUB_ENV
+            fi
+
+            echo "$output"
+            echo "output=$output" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: theme_validation_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Theme validation summary
+
+      - name: Create Comment
+        if: steps.theme_validation_comment.outputs.comment-id == ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Theme validation summary
+            ```
+            ${{ steps.validate_themes.outputs.output }}
+            ```
+
+      - name: Update Comment
+        if: steps.theme_validation_comment.outputs.comment-id != ''
+        # && steps.validate_themes.outputs.output != ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.theme_validation_comment.outputs.comment-id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            ## Theme validation summary
+            ```
+            ${{ steps.validate_themes.outputs.output }}
+            ```
+      
+      - name: Fail job if validation failed
+        if: env.VALIDATION_FAILED == 'true'
+        run: |
+          echo "Theme validation failed, failing the job..."
+          exit 1
